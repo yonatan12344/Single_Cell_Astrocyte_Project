@@ -64,6 +64,23 @@ sample_ids <- sapply(
     tail(x, 1) # Gets the last element after splitting
   }
 )
-clean_batch_astrocytes <- subset(AD_CT_Astrocytes, subset = '')
+```
+Adding more metadata into the AD_CT_Astrocytes , addmetadata doesnt add in place, have to assign it to a variable
+```{r}
+AD_CT_Astrocytes <- AddMetaData(AD_CT_Astrocytes, sample_ids, col.name = "Batch_name")
+```
+Subsetting the seurat object to remove the failed batchs as identified in the
+paper. 
+
+```{r}
+clean_batch_AD_CT_astro <- subset(AD_CT_Astrocytes, subset = Batch_name != "AD8" & Batch_name != "Ct8")
+head(AD_CT_Astrocytes@meta.data, 5)
+unique(AD_CT_Astrocytes@meta.data$Batch_name)
+
+```
+Bad batches were already removed (: so there is no need for me to do that here
+
+```{r}
+head(AD_CT_Astrocytes@meta.data, 5)
 ```
 
