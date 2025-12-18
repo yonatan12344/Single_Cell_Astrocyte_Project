@@ -4,7 +4,6 @@ library(dplyr)
 library(ggplot2)
 library(data.table)
 library(Seurat)
-install.packages("rstatix")  # if not installed
 library(rstatix)
 
 ```
@@ -67,9 +66,6 @@ sample_ids <- sapply(
     tail(x, 1) # Gets the last element after splitting
   }
 )
-<<<<<<< Updated upstream
-clean_batch_astrocytes <- subset(AD_CT_Astrocytes, subset = '')
-=======
 ```
 Adding more metadata into the AD_CT_Astrocytes , addmetadata doesnt add in place, have to assign it to a variable
 ```{r}
@@ -89,7 +85,6 @@ Bad batches were already removed (: so there is no need for me to do that here
 
 ```{r}
 head(AD_CT_Astrocytes@meta.data, 5)
->>>>>>> Stashed changes
 ```
 Time to get the AQP4 genes for the batches make a box and whisker plots for  AQP4 gene expression for each batch, and decide whether to use mean or median.
 ```{r}
@@ -101,7 +96,6 @@ gene_expression_aqp4_plot + labs(title="AQP4 Gene Expression")
 I see a lot of zero's present here so we are going to use the median here, so we are less influenced by outliers.
 
 ```{r}
-library(dplyr)
 
 # 1. Extract expression and batch metadata
 # Replace 'AQP4' with your gene and 'Batch_name' with your column
@@ -127,40 +121,5 @@ Doing the two-tailed Mann-Whitney U test
 ```{r}
 batch_medians %>% wilcox_test(median_val ~ AD_CT)
 ```
-Time to get the AQP4 genes for the batches make a box and whisker plots for  AQP4 gene expression for each batch, and decide whether to use mean or median.
-```{r}
-gene_expression_aqp4_plot <- VlnPlot(clean_batch_AD_CT_astro, features = "AQP4", group.by="Batch_name")
-gene_expression_aqp4_plot + labs(title="AQP4 Gene Expression")
 
-```
-
-I see a lot of zero's present here so we are going to use the median here, so we are less influenced by outliers.
-
-```{r}
-library(dplyr)
-
-# 1. Extract expression and batch metadata
-# Replace 'AQP4' with your gene and 'Batch_name' with your column
-exp_data <- FetchData(clean_batch_AD_CT_astro, vars = c("AQP4", "Batch_name"))
-
-# 2. Calculate median per batch
-batch_medians <- exp_data %>%
-  group_by(Batch_name) %>%
-  summarize(median_val = median(AQP4))
-
-print(batch_medians)
-
-```
-Adding an AD and CT collum for the dataframe
-```{r}
-batch_medians <- batch_medians %>%
-  mutate(AD_CT = case_when(
-    startsWith(Batch_name, "AD") ~ "AD",
-    startsWith(Batch_name, "Ct") ~ "CT"
-  ))
-```
-Doing the two-tailed Mann-Whitney U test
-```{r}
-batch_medians %>% wilcox_test(median_val ~ AD_CT)
-```
 
