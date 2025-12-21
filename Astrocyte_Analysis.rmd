@@ -1,125 +1,30 @@
-Loading in the needed libraries
+A better dataset?
+I am using GSE143758, a mouse snRNA seq study with several samples, comparing
+AD to WT mice. I am going to look at astrocytes and see if the data is high quality.
+
+Loading in needed packages
 ```{r}
-library(dplyr)
-library(ggplot2)
-library(data.table)
 library(Seurat)
-library(rstatix)
-
+library(tidyverse)
+library(readr)
 ```
-Loading in the actual data now
+
+Loading in the data into a csv so it can be turned into a seurat object
 ```{r}
-AD_WT_DATA <- read.csv('/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE138852_counts.csv', header=TRUE, row.names = 1)
-
+data <- read.delim("/Users/yonatan/Desktop/single_cell_AD_WT_mice_data/GSE143758_Admouse_Crtx_7-10m_Astrocytes_UMIcounts.csv", sep = ';', row.names = 1)
 
 ```
-
-Converting into a seurat object now, and loading in the metadata
+turning the data into a seurat object
 ```{r}
-cell_metadata <- read.csv("/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE138852_covariates.csv", header=TRUE, row.names = 1)
-seurat_data <-  CreateSeuratObject(counts = AD_WT_DATA, meta.data = cell_metadata)
+ad_wt_astro <- CreateSeuratObject(data)
 ```
-Preprocessing steps directly ripped from pbmc basic vignette, paramaters must be adjust for snRNA seq LATER!!!
+Adding in the percent of counts that map to mitochondrial DNA in the seurat object's meta data 
 ```{r}
-seurat_data[["percent.mt"]] <- PercentageFeatureSet(seurat_data, pattern = "^MT-")
-
-head(seurat_data@meta.data, 5)
+ad_wt_astro[["percent.mt"]] <- PercentageFeatureSet(ad_wt_astro, pattern = "^MT-")
 ```
-
-Basic Visulizations now
+Generating key QC plots to help determine appropriate cutoff values for the gene count of cells, as well as the total number of couts for genes. These is to filter low quality cells, cells that are dying or low quality often have a lot of mitochondrial, and snRNA seq in theory should have no mitchondrial contamination.
 ```{r}
 # Visualize QC metrics as a violin plot
-VlnPlot(seurat_data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-
-# FeatureScatter is typically used to visualize feature-feature relationships, but can be used
-# for anything calculated by the object, i.e. columns in object metadata, PC scores etc.
-
-plot1 <- FeatureScatter(seurat_data, feature1 = "nCount_RNA", feature2 = "percent.mt")
-plot2 <- FeatureScatter(seurat_data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-plot1 + plot2
+VlnPlot(ad_wt_astro, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0)
 ```
-Based of visual inspection and in the interest of saving time (!! fix later) , i dont subset any nFeatureRNAm and I will use a 4 percent cutoff for mitcohrondial genes
-
-!!! Edit, the paper already did QC and preprocessing for me, so I will just normalization and go from there. I might use Scttransform instead, since that approach might actually be better to use here.
-
-Data normalization this was done the lazy way so look into fixing this later
-```{r}
-seurat_data <- NormalizeData(seurat_data, normalization.method = "LogNormalize", scale.factor = 10000)
-```
-After the data has been normalized I want to subset the seurat object to only contain Astrocyte cells
-
-```{r}
-#AD_CT_Astrocytes <- subset(seurat_data, subset="oupSample.celltype" == "astro" )
-
-AD_CT_Astrocytes <- seurat_data[ , rownames(seurat_data@meta.data)[seurat_data@meta.data$oupSample.cellType == 'astro']]
-
-```
-Now that I have the normalized Astrocytes I can drop the batches that were considered faulty in the paper these should be the row names that end in AD7_AD8, and Ct7_Ct18
-```{r}
-# 1. Get the full list of cell barcodes (row names/column names)
-cell_names <- colnames(AD_CT_Astrocytes)
-# 2. Split each barcode by the underscore and keep the LAST element
-# This separates the UMI from the Sample ID.
-sample_ids <- sapply(
-  X = strsplit(cell_names, split = "_"),
-  FUN = function(x) {
-    tail(x, 1) # Gets the last element after splitting
-  }
-)
-```
-Adding more metadata into the AD_CT_Astrocytes , addmetadata doesnt add in place, have to assign it to a variable
-```{r}
-AD_CT_Astrocytes <- AddMetaData(AD_CT_Astrocytes, sample_ids, col.name = "Batch_name")
-```
-Subsetting the seurat object to remove the failed batchs as identified in the
-paper. 
-
-```{r}
-clean_batch_AD_CT_astro <- subset(AD_CT_Astrocytes, subset = Batch_name != "AD8" & Batch_name != "Ct8")
-head(AD_CT_Astrocytes@meta.data, 5)
-unique(AD_CT_Astrocytes@meta.data$Batch_name)
-
-```
-
-Bad batches were already removed (: so there is no need for me to do that here
-
-```{r}
-head(AD_CT_Astrocytes@meta.data, 5)
-```
-Time to get the AQP4 genes for the batches make a box and whisker plots for  AQP4 gene expression for each batch, and decide whether to use mean or median.
-```{r}
-gene_expression_aqp4_plot <- VlnPlot(clean_batch_AD_CT_astro, features = "AQP4", group.by="Batch_name")
-gene_expression_aqp4_plot + labs(title="AQP4 Gene Expression")
-
-```
-
-I see a lot of zero's present here so we are going to use the median here, so we are less influenced by outliers.
-
-```{r}
-
-# 1. Extract expression and batch metadata
-# Replace 'AQP4' with your gene and 'Batch_name' with your column
-exp_data <- FetchData(clean_batch_AD_CT_astro, vars = c("AQP4", "Batch_name"))
-
-# 2. Calculate median per batch
-batch_medians <- exp_data %>%
-  group_by(Batch_name) %>%
-  summarize(median_val = median(AQP4))
-
-print(batch_medians)
-
-```
-Adding an AD and CT collum for the dataframe
-```{r}
-batch_medians <- batch_medians %>%
-  mutate(AD_CT = case_when(
-    startsWith(Batch_name, "AD") ~ "AD",
-    startsWith(Batch_name, "Ct") ~ "CT"
-  ))
-```
-Doing the two-tailed Mann-Whitney U test
-```{r}
-batch_medians %>% wilcox_test(median_val ~ AD_CT)
-```
-
 
