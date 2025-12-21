@@ -25,6 +25,6 @@ ad_wt_astro[["percent.mt"]] <- PercentageFeatureSet(ad_wt_astro, pattern = "^MT-
 Generating key QC plots to help determine appropriate cutoff values for the gene count of cells, as well as the total number of couts for genes. These is to filter low quality cells, cells that are dying or low quality often have a lot of mitochondrial, and snRNA seq in theory should have no mitchondrial contamination.
 ```{r}
 # Visualize QC metrics as a violin plot
-VlnPlot(ad_wt_astro, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0)
+VlnPlot(ad_wt_astro, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 ```
 
