@@ -37,5 +37,6 @@ x <- rownames(ad_wt_astro)
 # and use a value between 3 - 5 outliers for the nCount_RNA and n_Feature_RNA
 # It is possible I am removing biological signal, but I will 
 ```
+QC metrics, the paper already did preprocessing and the average number of genes the observed for the astrocytes seem pretty low. I will do filtering just based of so values to get some of the outliers out of the datasert
 
 Adaptive Thresholds for my data. Based of the informations here, https://bioconductor.org/books/3.12/OSCA/quality-control.html?utm_source=chatgpt.com . Essentially operating under the assumption most of the nuclei here are off high quality, I can set thresholds based on outliers (using median for this) I will "calculate the median absolutiate deviation, from the median value of each metric across the cells" (word for word from the website) for the 3 features above. 
