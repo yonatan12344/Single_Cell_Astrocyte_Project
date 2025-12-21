@@ -12,8 +12,6 @@ library(readr)
 Loading in the data into a csv so it can be turned into a seurat object
 ```{r}
 data <- read.delim("/Users/yonatan/Desktop/single_cell_AD_WT_mice_data/GSE143758_Admouse_Crtx_7-10m_Astrocytes_UMIcounts.csv", sep = ';', row.names = 1)
-
-all_data_umi <- read.delim("/Users/yonatan/Desktop/single_cell_AD_WT_mice_data/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt", sep = ' ', row.names = 1)
 ```
 turning the data into a seurat object
 ```{r}
@@ -21,12 +19,24 @@ ad_wt_astro <- CreateSeuratObject(data)
 ```
 Adding in the percent of counts that map to mitochondrial DNA in the seurat object's meta data 
 ```{r}
-ad_wt_astro[["percent.mt"]] <- PercentageFeatureSet(ad_wt_astro, pattern = "^MT-")
+ad_wt_astro[["percent.mt"]] <- PercentageFeatureSet(ad_wt_astro, pattern = "^mt-")
 ```
 Generating key QC plots to help determine appropriate cutoff values for the gene count of cells, as well as the total number of couts for genes. These is to filter low quality cells, cells that are dying or low quality often have a lot of mitochondrial, and snRNA seq in theory should have no mitchondrial contamination.
 ```{r}
 # Visualize QC metrics as a violin plot
 VlnPlot(ad_wt_astro, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0.1)
+?VlnPlot
+?CreateSeuratObject
+metadata <- ad_wt_astro@meta.data
+metadata
+x <- rownames(ad_wt_astro)
+
+
+# Paper used a filtering metric of > 400 detected genes, 
+# I will manually calculate the outlier values for the Feature RNA,
+# and use a value between 3 - 5 outliers for the nCount_RNA and n_Feature_RNA
+# It is possible I am removing biological signal, but I will 
 ```
 QC metrics, the paper already did preprocessing and the average number of genes the observed for the astrocytes seem pretty low. I will do filtering just based of so values to get some of the outliers out of the datasert
 
+Adaptive Thresholds for my data. Based of the informations here, https://bioconductor.org/books/3.12/OSCA/quality-control.html?utm_source=chatgpt.com . Essentially operating under the assumption most of the nuclei here are off high quality, I can set thresholds based on outliers (using median for this) I will "calculate the median absolutiate deviation, from the median value of each metric across the cells" (word for word from the website) for the 3 features above. 
