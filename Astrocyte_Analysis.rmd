@@ -4,9 +4,7 @@ AD to WT mice. I am going to look at astrocytes and see if the data is high qual
 
 Loading in needed packages
 ```{r} 
-install.packages(BP)
 library(data.table)
-library(DESeq2)
 library(Seurat)
 library(tidyverse)
 library(readr)
@@ -16,43 +14,34 @@ library(Matrix)
 
 Loading in the data into a csv so it can be turned into a seurat object
 ```{r}
-# 1. Read the data
-data <- fread("/Users/yonatan/Desktop/single_cell_AD_WT_mice_data/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt", 
-              sep = "\t", header = TRUE, data.table = FALSE)
+library(BPCells)
+library(data.table)
 
-# 1.5. SET ROWNAMES BEFORE CONVERSION
-rownames(data) <- data[[1]]
-data <- data[,-1]
+df <- fread(
+  "GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt",
+  data.table = FALSE
+)
 
-# 2. Convert to sparse matrix
-counts_sparse <- Matrix(as.matrix(data), sparse = TRUE)
+gene_names <- df[[1]]
+df <- df[,-1]
 
-# 3. Create Seurat Object
-all_nuclei <- CreateSeuratObject(counts = counts_sparse)
+# Create BPCells-backed matrix on disk
+bp_counts <- write_matrix_from_dataframe(
+  df,
+  rownames = gene_names,
+  path = "bp_counts"
+)
 
-# 4. Clean up
-rm(data, counts_sparse)
-gc()
+rm(df); gc()
+
+
 ```
-turning the data into a seurat object
+Looking inside the Seurat Object
+
 ```{r}
-library(Matrix)
-library(Seurat)
-
-# 1. Convert to sparse matrix directly
-sparse_counts <- as(as.matrix(data), "dgCMatrix")
-
-# 2. Create the Seurat object
-seurat_obj <- CreateSeuratObject(counts = sparse_counts)
-
-# 3. Remove the temporary object to free RAM
-rm(sparse_counts)
-gc()
-
-ad_wt_astro <- CreateSeuratObject(data)
-
+all_nuclei@meta.data
 ```
-Adding in the percent of counts that map to mitochondrial DNA in the seurat object's meta data 
+
 ```{r}
 ad_wt_astro[["percent.mt"]] <- PercentageFeatureSet(ad_wt_astro, pattern = "^mt-")
 ```
