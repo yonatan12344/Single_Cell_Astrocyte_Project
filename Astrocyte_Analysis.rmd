@@ -3,19 +3,54 @@ I am using GSE143758, a mouse snRNA seq study with several samples, comparing
 AD to WT mice. I am going to look at astrocytes and see if the data is high quality.
 
 Loading in needed packages
-```{r}
+```{r} 
+install.packages(BP)
+library(data.table)
+library(DESeq2)
 library(Seurat)
 library(tidyverse)
 library(readr)
+library(stringr)
+library(Matrix)
 ```
 
 Loading in the data into a csv so it can be turned into a seurat object
 ```{r}
-data <- read.delim("/Users/yonatan/Desktop/single_cell_AD_WT_mice_data/GSE143758_Admouse_Crtx_7-10m_Astrocytes_UMIcounts.csv", sep = ';', row.names = 1)
+# 1. Read the data
+data <- fread("/Users/yonatan/Desktop/single_cell_AD_WT_mice_data/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt", 
+              sep = "\t", header = TRUE, data.table = FALSE)
+
+# 1.5. SET ROWNAMES BEFORE CONVERSION
+rownames(data) <- data[[1]]
+data <- data[,-1]
+
+# 2. Convert to sparse matrix
+counts_sparse <- Matrix(as.matrix(data), sparse = TRUE)
+
+# 3. Create Seurat Object
+all_nuclei <- CreateSeuratObject(counts = counts_sparse)
+
+# 4. Clean up
+rm(data, counts_sparse)
+gc()
 ```
 turning the data into a seurat object
 ```{r}
+library(Matrix)
+library(Seurat)
+
+# 1. Convert to sparse matrix directly
+sparse_counts <- as(as.matrix(data), "dgCMatrix")
+
+# 2. Create the Seurat object
+seurat_obj <- CreateSeuratObject(counts = sparse_counts)
+
+# 3. Remove the temporary object to free RAM
+rm(sparse_counts)
+gc()
+
 ad_wt_astro <- CreateSeuratObject(data)
+
 ```
 Adding in the percent of counts that map to mitochondrial DNA in the seurat object's meta data 
 ```{r}
@@ -24,12 +59,8 @@ ad_wt_astro[["percent.mt"]] <- PercentageFeatureSet(ad_wt_astro, pattern = "^mt-
 Generating key QC plots to help determine appropriate cutoff values for the gene count of cells, as well as the total number of couts for genes. These is to filter low quality cells, cells that are dying or low quality often have a lot of mitochondrial, and snRNA seq in theory should have no mitchondrial contamination.
 ```{r}
 # Visualize QC metrics as a violin plot
-VlnPlot(ad_wt_astro, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0.1)
-?VlnPlot
-?CreateSeuratObject
-metadata <- ad_wt_astro@meta.data
-metadata
-x <- rownames(ad_wt_astro)
+VlnPlot(ad_wt_astro, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 1, pt.size = 0)
+VlnPlot(ad_wt_astro, features = c( "nCount_RNA"), ncol = 1, pt.size = 0)
 
 
 # Paper used a filtering metric of > 400 detected genes, 
@@ -37,6 +68,90 @@ x <- rownames(ad_wt_astro)
 # and use a value between 3 - 5 outliers for the nCount_RNA and n_Feature_RNA
 # It is possible I am removing biological signal, but I will 
 ```
-QC metrics, the paper already did preprocessing and the average number of genes the observed for the astrocytes seem pretty low. I will do filtering just based of so values to get some of the outliers out of the datasert
 
-Adaptive Thresholds for my data. Based of the informations here, https://bioconductor.org/books/3.12/OSCA/quality-control.html?utm_source=chatgpt.com . Essentially operating under the assumption most of the nuclei here are off high quality, I can set thresholds based on outliers (using median for this) I will "calculate the median absolutiate deviation, from the median value of each metric across the cells" (word for word from the website) for the 3 features above. 
+Adaptive Thresholds for my data. Based of the informations here, https://bioconductor.org/books/3.12/OSCA/quality-control.html?utm_source=chatgpt.com . Essentially operating under the assumption most of the nuclei here are off high quality, I can set thresholds based on outliers (using median for this) I will "calculate the median absolutiate deviation, from the median value of each metric across the cells" (word for word from the website) for the 3 features above.
+
+For this moment though I am a bit lazy so I will base QC metrics, off of visually determined cutoffs, and integrate the outlier detection process later, since the work required to do so is extensive, and requires extra packages. The visual below will further help determine cutoffs.
+
+```{r}
+plot1 <- FeatureScatter(ad_wt_astro, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(ad_wt_astro, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+```
+
+Based of the visuals from earlier we want to get reid of these outliers, cutoffs of 5 percent for the mitochondrial percentage,
+2500 for the total number of counted UMI's and 1500 for the number of expressed genes would be reasonable. I also want to set a minimum for the nFeature RNA of 200 for now.
+
+```{r}
+ad_wt_astro <- subset(ad_wt_astro, subset = nFeature_RNA > 200 & nFeature_RNA < 1500 & percent.mt < 5)
+plot1 <- FeatureScatter(ad_wt_astro, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(ad_wt_astro, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+```
+Adding appropiate metadata
+
+```{r}
+ad_wt_astro$full_sample_info <- sub("^[^_]+_([^_]+)_.*", "\\1", rownames(ad_wt_astro@meta.data))
+
+
+
+# 1. Extract Age (digits before 'm')
+ad_wt_astro$age_months <- as.numeric(gsub("([0-9]+)m.*", "\\1", ad_wt_astro$full_sample_info))
+
+# 2. Extract Condition (WT or AD)
+ad_wt_astro$condition <- str_extract(ad_wt_astro$full_sample_info, "WT|AD")
+
+
+# Merged Metadata age and AD status combined
+
+ad_wt_astro$age_condition <- paste(ad_wt_astro$age_months, ad_wt_astro$condition, sep = "_")
+
+# Adding in the sample id column
+ad_wt_astro$sample_id <- str_sub(ad_wt_astro$full_sample_info, -3, -1)
+
+unique(ad_wt_astro$full_sample_info)
+```
+
+
+
+
+Unsure if global scaling or SCT transform is better here? I will stick
+to global scaling for now, and use 500 genes for find variable features. This advice is from chat tho so it could be bad.
+
+```{r}
+# normalizing, findingvariablefeatures, and scaling data
+ad_wt_astro <- NormalizeData(ad_wt_astro, normalization.method = "LogNormalize", scale.factor = 10000)
+ad_wt_astro <- FindVariableFeatures(ad_wt_astro, nfeatures = 500)
+ad_wt_astro <- ScaleData(ad_wt_astro)
+ad_wt_astro <- RunPCA(ad_wt_astro)
+ElbowPlot(ad_wt_astro)
+ad_wt_astro <- RunUMAP(ad_wt_astro, dims = 1:20)
+
+```
+Visualization time !!
+```{r}
+condition_plot_AD_WT <- DimPlot(ad_wt_astro, reduction = 'umap', group.by = 'condition', label= TRUE)
+
+
+condition_plot_age <- DimPlot(ad_wt_astro, reduction = 'umap', group.by = 'age_months', label= TRUE)
+
+condition_age_plot <- DimPlot(ad_wt_astro, reduction = 'umap', group.by = 'age_condition', label = TRUE)
+
+condition_plot_age + 
+condition_plot_AD_WT +
+condition_age_plot
+
+
+
+```
+# !!! Stuff is clustering together, I don't know why usefull to discuss I think
+
+
+
+# PSEUDOBULK TIME
+
+```{r}
+
+```
+
+
