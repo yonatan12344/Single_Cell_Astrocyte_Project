@@ -1,0 +1,29 @@
+Loading the necessary libraries
+```{r}
+library(Seurat)
+library(tidyverse)
+library(readr)
+```
+
+Loading in the processed count matrix csv file
+```{r}
+data <- read.delim("/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE143758_Admouse_Hippocampus_3TimeCourses_Astrocytes_WT_AD_Aging.csv", sep = ';', row.names = 1)
+
+```
+
+Creating the Seurat Object
+```{r}
+AD_WT_astrocyte <- CreateSeuratObject(data)
+AD_WT_astrocyte@meta.data <- tibble::rownames_to_column((AD_WT_astrocyte@meta.data), "complete_id")
+AD_WT_astrocyte@meta.data
+series <- AD_WT_astrocyte@meta.data['complete_id']
+```
+# Mapping orig.ident to sample_id and strain, all these batches are eqal to 1
+# ALL of these are males
+
+
+
+
+
+
+
