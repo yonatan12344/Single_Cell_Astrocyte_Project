@@ -1,0 +1,19 @@
+Loading the necessary libraries
+```{r}
+library(Seurat)
+library(tidyverse)
+library(readr)
+```
+
+Loading in the processed count matrix csv file
+```{r}
+data <- as.matrix(fread("/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE143758_Admouse_Hippocampus_3TimeCourses_Astrocytes_WT_AD_Aging.csv", sep = ';'), rownames=1)
+```
+
+Creating the Seurat Object
+```{r}
+AD_WT_astrocyte <- CreateSeuratObject(counts = data)
+```
+Calculating the percent of reads in a cell that map to mitochondrial genes
+snRNA seq should have a low percentage.
+
