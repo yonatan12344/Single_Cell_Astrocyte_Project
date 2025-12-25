@@ -1,29 +1,95 @@
-Loading the necessary libraries
+library loading
 ```{r}
 library(Seurat)
 library(tidyverse)
-library(readr)
 ```
 
-Loading in the processed count matrix csv file
+loading in the data
+
 ```{r}
-data <- read.delim("/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE143758_Admouse_Hippocampus_3TimeCourses_Astrocytes_WT_AD_Aging.csv", sep = ';', row.names = 1)
-
+data = read.delim('/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt', sep = '\t')
+counts <- CreateSeuratObject(data)
 ```
 
-Creating the Seurat Object
+Saving the Seurat object and allowing it to be loaded again the future for easy access
 ```{r}
-AD_WT_astrocyte <- CreateSeuratObject(data)
-AD_WT_astrocyte@meta.data <- tibble::rownames_to_column((AD_WT_astrocyte@meta.data), "complete_id")
-AD_WT_astrocyte@meta.data
-series <- AD_WT_astrocyte@meta.data['complete_id']
+SaveSeuratRds(counts,
+              file= "initial_raw_count_matrix.rds")
+counts <- LoadSeuratRds("initial_raw_count_matrix.rds")
 ```
-# Mapping orig.ident to sample_id and strain, all these batches are eqal to 1
-# ALL of these are males
+
+Adding in the mitochondrial read percentages to each cell
+
+```{r}
+counts[["percent.mt"]] <- PercentageFeatureSet(counts, pattern = '^mt-')
+unique(counts@meta.data$orig.ident)
+NP40_Batch <- counts@meta.data %>% filter(orig.ident == 'NP40.Batch1')
+# Visualize QC metrics as a violin plot
+batch_1 <- VlnPlot(counts, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), idents = 'NP40.Batch1', ncol = 3, pt.size=0)
+batch_2 <- VlnPlot(counts, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), idents = 'EZ.Batch1', ncol = 3, pt.size=0)
+batch_3 <- VlnPlot(counts, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), idents = 'NP40.Batch3', ncol = 3, pt.size=0)
+batch_1
+batch_2
+batch_3
+
+plot1 <- FeatureScatter(counts, feature1 = "nCount_RNA", feature2 = "percent.mt", group.by = 'orig.ident', split.by = 'orig.ident', pt.size=0)
+plot1
+plot2 <- FeatureScatter(counts, feature1 = "nFeature_RNA", feature2 = "nCount_RNA", group.by = 'orig.ident', split.by = 'orig.ident')
+plot2
+```
+Subsetting the 3 batches based on their unique distributions of data, and then I will rejoin them
+
+```{r}
+#Subsetting seurat object into multiple parts so I can do batch specific QC for each, 
+# and then merge them again.
+?subset()
+counts_1 <- subset(counts, idents = 'NP40.Batch1')
+counts_2 <- subset(counts,  idents = 'EZ.Batch1')
+counts_3 <- subset(counts, idents = 'NP40.Batch3')
+
+```
+QC metrics for each batch
+```{r}
+counts_1 <- subset(counts_1, subset = nFeature_RNA > 200 & percent.mt < 5)
+counts_2 <- subset(counts_2, subset = nFeature_RNA > 200 & nFeature_RNA < 2800 & percent.mt < 5)
+counts_3 <- subset(counts_3, subset = nFeature_RNA > 200 & nFeature_RNA < 2800 & percent.mt < 5)
+```
+
+Remerging the seurat object
+
+```{r}
+counts <- merge(x = counts_1, y = list(counts_2, counts_3))
+```
+
+Im going to try using sctransform here, not sure if its better compared to the find variable features, scale date, and normalize data approach tho
+
+```{r}
+counts <- SCTransform(counts)
+counts <- RunPCA(counts, verbose = FALSE)
+#documentation says pushing the PC components is something they found workis better
+ElbowPlot(counts)
+counts <- RunUMAP(counts, dims = 1:30, verbose = FALSE)
+counts <- FindNeighbors(counts, dims = 1:30, verbose = FALSE)
+counts <- FindClusters(counts, verbose = FALSE)
+DimPlot(counts, label = TRUE, group.by='orig.ident') + labs(title="Batch Effects UMAP")
+```
+identifying batch effects in umap plot
+```{r}
+DimPlot(counts, label = TRUE) + labs(title="Unannotated Cell types?")
+DimPlot(counts, label = FALSE, group.by='orig.ident') + labs(title="Batch Effects UMAP")
+```
+Conclusion the batch effects don't seem to be too strong in the data, I am going to ignore them. Time to identify the astrocyte cluster based on cell markers
 
 
+```{r}
+FeaturePlot(counts, features = c("GFAP", "EAAT1", "GLAST", "EAAT2", "GLT-1"))
+```
 
 
-
-
+Saving the Seurat object and allowing it to be loaded again the future for easy access
+```{r}
+SaveSeuratRds(counts,
+              file= "UMAP_PCA_SCT_transform.rds")
+```
+```
 
