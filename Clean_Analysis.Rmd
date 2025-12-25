@@ -91,9 +91,6 @@ FeaturePlot(counts, features = c("GFAP", "EAAT1", "GLAST", "EAAT2", "GLT-1"))
 
 Saving the Seurat object and allowing it to be loaded again the future for easy access
 ```{r}
-SaveSeuratRds(counts,
-              file= "UMAP_PCA_SCT_transform.rds")
-counts <- LoadSeuratRds("UMAP_PCA_SCT_transform.rds")
 ?FindAllMarkers
 ```
 
@@ -123,6 +120,11 @@ Might be reaching here but I think its safe to assume clusters 1 and 7 are astro
 Exporting into an Astrocyte_specific file based on clusters 1 and 7
 ```{r}
 counts@meta.data
-seven_month_all_nuclei_astrocytes <- subset(counts, idents list(1, 7))
+seven_month_all_nuclei_astrocytes <- subset(counts, idents = list(1, 7))
+```
+```{r}
+SaveSeuratRds(counts,
+              file= "UMAP_PCA_SCT_PrepSCT_markers._counts.markers_transform.rds")
+counts <- LoadSeuratRds("UMAP_PCA_SCT_transform.rds")
 ```
 
