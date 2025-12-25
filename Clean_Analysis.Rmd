@@ -1,8 +1,11 @@
 library loading
 ```{r}
+install.packages("scCATCH")
 library(Seurat)
 library(tidyverse)
+library(scCATCH)
 ```
+
 
 loading in the data
 
@@ -90,6 +93,36 @@ Saving the Seurat object and allowing it to be loaded again the future for easy 
 ```{r}
 SaveSeuratRds(counts,
               file= "UMAP_PCA_SCT_transform.rds")
+counts <- LoadSeuratRds("UMAP_PCA_SCT_transform.rds")
+?FindAllMarkers
 ```
+
+
+```{r}
+# Error message told me to run this before running FindAllMarkers
+counts <- PrepSCTFindMarkers(counts)
+counts.markers <- FindAllMarkers(counts, only.pos = FALSE)
+counts.markers %>%
+    group_by(cluster) %>%
+    dplyr::filter(avg_log2FC > 1)
+x <- counts@meta.data$seurat_clusters
+?findcelltype
+```
+
+
+# using scCATCH to identify cell types for me (probably suboptimal lowkey but im kinda of tired)
+
+```{r}
+FeaturePlot(counts, features = c("Slc1a3", "Gfap", "Aldoc", "Glul", "Rarres2", "Slc6a13", "Aqp4"))
+
+FeaturePlot(counts, features = c("Slc1a3", "Gfap"))
+```
+Might be reaching here but I think its safe to assume clusters 1 and 7 are astrocytes.
+
+
+Exporting into an Astrocyte_specific file based on clusters 1 and 7
+```{r}
+counts@meta.data
+seven_month_all_nuclei_astrocytes <- subset(counts, idents list(1, 7))
 ```
 
