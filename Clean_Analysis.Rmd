@@ -2,13 +2,16 @@ library loading
 ```{r}
 library(Seurat)
 library(tidyverse)
+library(data.table)
 ```
+
 
 loading in the data
 
 ```{r}
-data = read.delim('/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt', sep = '\t')
+data <- as.matrix(fread('/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Data/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt'),rownames=1)
 counts <- CreateSeuratObject(data)
+
 ```
 
 Saving the Seurat object and allowing it to be loaded again the future for easy access
@@ -88,8 +91,34 @@ FeaturePlot(counts, features = c("GFAP", "EAAT1", "GLAST", "EAAT2", "GLT-1"))
 
 Saving the Seurat object and allowing it to be loaded again the future for easy access
 ```{r}
-SaveSeuratRds(counts,
-              file= "UMAP_PCA_SCT_transform.rds")
+?FindAllMarkers
 ```
+
+
+```{r}
+# Error message told me to run this before running FindAllMarkers
+counts <- PrepSCTFindMarkers(counts)
+counts.markers <- FindAllMarkers(counts, only.pos = FALSE)
+counts.markers %>%
+    group_by(cluster) %>%
+    dplyr::filter(avg_log2FC > 1)
+x <- counts@meta.data$seurat_clusters
+?findcelltype
+```
+
+
+# using scCATCH to identify cell types for me (probably suboptimal lowkey but im kinda of tired)
+
+```{r}
+FeaturePlot(counts, features = c("Slc1a3", "Gfap", "Aldoc", "Glul", "Rarres2", "Slc6a13", "Aqp4"))
+```
+Might be reaching here but I think its safe to assume clusters 1 and 7 are astrocytes.
+
+
+Exporting into an Astrocyte_specific file based on clusters 1 and 7
+
+```{r}
+SaveSeuratRds(counts,
+              file= "current_progress.rds")
 ```
 
