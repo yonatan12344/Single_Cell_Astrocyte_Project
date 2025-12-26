@@ -6,3 +6,6 @@ initial_raw_count_matrix.rds
 UMAP_PCA_SCT_transform.rds
 initial_raw_count_matrix.rds
 UMAP_PCA_SCT_transform.rds
+UMAP_PCA_SCT_PrepSCT_markers._counts.markers_transform.rds
+GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt
+
