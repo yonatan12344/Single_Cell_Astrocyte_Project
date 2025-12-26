@@ -6,3 +6,5 @@ initial_raw_count_matrix.rds
 UMAP_PCA_SCT_transform.rds
 initial_raw_count_matrix.rds
 UMAP_PCA_SCT_transform.rds
+astros_I_found.csv
+*.rds

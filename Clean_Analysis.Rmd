@@ -111,14 +111,45 @@ x <- counts@meta.data$seurat_clusters
 
 ```{r}
 FeaturePlot(counts, features = c("Slc1a3", "Gfap", "Aldoc", "Glul", "Rarres2", "Slc6a13", "Aqp4"))
+FeaturePlot(counts, features = c("Gfap"))
+FeaturePlot(counts, features = c("Aldoc"))
+FeaturePlot(counts, features = c("Rarres2"))
+FeaturePlot(counts, features = c("Aqp4"))
+FeaturePlot(counts, features = c("Rarres2"))
+FeaturePlot(counts, features = c("Slc6a13"))
+
 ```
 Might be reaching here but I think its safe to assume clusters 1 and 7 are astrocytes.
 
 
-Exporting into an Astrocyte_specific file based on clusters 1 and 7
+Saving cell ids for cluster 1 and 7 which I am assuming are astrocytes (might be wrong low key, and going off vibes a bit)
 
 ```{r}
-SaveSeuratRds(counts,
-              file= "current_progress.rds")
+?subset
+new.cluster.ids <- c("unkown", "Astrocyte", "unkown", "unkown", "unkown","unkown","unkown", "Astrocyte", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown", "unkown")
+names(new.cluster.ids) <- levels(counts)
+counts <- RenameIdents(counts, new.cluster.ids)
+counts$cell_type <- Idents(counts)
+DimPlot(counts, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
+counts@meta.data
+# Create a new object with only Astrocytes
+astro_only <- subset(counts, idents = "Astrocyte")
+nrow(astro_only@meta.data)
+
+```
+
+
+```{r}
+# saving the astrocyte specific cell subset
+SaveSeuratRds(astro_only,
+              file= "astro_only.rds")
+```
+
+Exporting the seurat object as a csv for a seperate analysis (pseudobulk)
+```{r}
+counts_mtx <- astro_only[["RNA"]]$counts 
+
+# 2. Save as CSV (for small datasets)
+write.csv(as.matrix(counts_mtx), file = "astros_I_found.csv")
 ```
 
