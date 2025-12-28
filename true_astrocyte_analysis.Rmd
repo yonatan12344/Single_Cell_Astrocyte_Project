@@ -1,0 +1,133 @@
+Astrocyte Specific Anlalysis and pseudobulk
+Tasks to complete
+0. Standard seurat preprocessing workflow
+1. Map row ids to sample id, and AD status.
+2. View batch via UMAP to check for batch effects
+3. Run UMAP for AD status
+4. Pseudobulk, watch bioinformagician for more details
+
+loading libraries
+```{r}
+library(Seurat)
+library(tidyverse)
+```
+
+```{r}
+raw_data <- read.csv("/Users/yonatan/Desktop/Single_Cell_Proj/AQP4_snRNA_project/AQP4_Expression_snRNA_seq/Code_and_writeup/Single_Cell_Astrocyte_Project/astros_I_found.csv", row.names = 1)
+astro_data <- CreateSeuratObject(raw_data)
+```
+
+Standard preprocessing checks
+```{r}
+astro_data@meta.data
+astro_data[["percent.mt"]] <- PercentageFeatureSet(astro_data, pattern = "^mt-")
+# Visualize QC metrics as a violin plot
+VlnPlot(astro_data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0)
+FeatureScatter(astro_data, feature1 = "nCount_RNA", feature2 = "percent.mt")
+FeatureScatter(astro_data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+
+```
+I already did QC before, so I will not change anything this time, since global QC on all nuclei was already performed.
+
+# Adding AD status to cell metadata
+```{r}
+astro_data@meta.data$full_meta_data <- rownames(astro_data@meta.data)
+astro_data@meta.data
+# Assumes the column name is 'cell_id'
+astro_data@meta.data$batch_id_sample_id <- substr(
+  astro_data@meta.data$full_meta_data, 
+  start = 1, 
+  stop = nchar(astro_data@meta.data$full_meta_data) - 16
+)
+unique(astro_data@meta.data$batch_id_sample_id)
+```
+# Mapping those ids to sample IDs and AD status, and sex
+```{r}
+# Define the mapping
+genotype_map <- c(
+  "NP40.Batch1_Untreated.Hip.S2.R_" = "AD",
+  "NP40.Batch1_Wt.Hip.S2.R_"        = "WT",
+  "EZ.Batch1_HipR.WT.G3.2w_"        = "WT",
+  "EZ.Batch1_HipR.AD.G1.4w_"        = "AD",
+  "EZ.Batch1_HipR.AD.G3.2w_"        = "AD",
+  "EZ.Batch1_HipR.WT.G1.4w_"        = "WT",
+  "NP40.Batch3_Untreated.Hip.S1.L_" = "AD",
+  "NP40.Batch3_Untreated.Hip.S2.L_" = "AD",
+  "NP40.Batch3_Wt.Hip.S1.L_"        = "WT",
+  "NP40.Batch3_Wt.Hip.S2.L_"        = "WT"
+)
+
+sample_id_map <- c(
+  "NP40.Batch1_Untreated.Hip.S2.R_" = "sample_1",
+  "NP40.Batch1_Wt.Hip.S2.R_"        = "sample_2",
+  "EZ.Batch1_HipR.WT.G3.2w_"        = "sample_3",
+  "EZ.Batch1_HipR.AD.G1.4w_"        = "sample_4",
+  "EZ.Batch1_HipR.AD.G3.2w_"        = "sample_5",
+  "EZ.Batch1_HipR.WT.G1.4w_"        = "sample_6",
+  "NP40.Batch3_Untreated.Hip.S1.L_" = "sample_7",
+  "NP40.Batch3_Untreated.Hip.S2.L_" = "sample_8",
+  "NP40.Batch3_Wt.Hip.S1.L_"        = "sample_9",
+  "NP40.Batch3_Wt.Hip.S2.L_"        = "sample_10"
+)
+
+# Apply mapping to your metadata, AD Status and sample ID
+# Replace 'sample_id' with your actual column name
+astro_data@meta.data$AD_STATUS <- genotype_map[astro_data@meta.data$batch_id_sample_id]
+
+astro_data@meta.data$sample_id <- sample_id_map[astro_data@meta.data$batch_id_sample_id]
+
+unique(astro_data@meta.data$AD_STATUS)
+astro_data@meta.data
+```
+
+
+Normalize, identify highly variable features, and scaling the data.
+
+```{r}
+astro_data <- NormalizeData(astro_data, normalization.method = "LogNormalize", scale.factor = 10000)
+astro_data <- FindVariableFeatures(astro_data, selection.method = "vst", nfeatures = 2000)
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(astro_data), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(astro_data)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot1
+plot2
+
+all.genes <- rownames(astro_data)
+astro_data <- ScaleData(astro_data, features = all.genes)
+```
+
+```{r}
+astro_data <- RunPCA(astro_data, features = VariableFeatures(object = astro_data))
+ElbowPlot(astro_data)
+DimPlot(astro_data, reduction = "pca") + NoLegend()
+```
+
+```{r}
+astro_data <- FindNeighbors(astro_data, dims = 1:12)
+astro_data <- FindClusters(astro_data, resolution = 0.5)
+```
+```{r}
+astro_data <- RunUMAP(astro_data, dims = 1:10)
+DimPlot(astro_data, reduction = "umap", group.by='AD_STATUS')
+
+DimPlot(astro_data, reduction = "umap", group.by='orig.ident')
+```
+
+### PSEUDOBULKING TIME 
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(DESeq2)
+library(pheatmap)
+library(EnhancedVolcano)
+library(RColorBrewer)
+library(cowplot)
+library(dplyr)
+library(ggrepel)
+```
+
