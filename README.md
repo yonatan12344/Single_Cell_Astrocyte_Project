@@ -84,6 +84,33 @@ Astrocytes vs Nonastrocyte clusters
 <img width="700" height="432" alt="image" src="https://github.com/user-attachments/assets/21f87580-c27c-4351-8037-c0c1f9233471" />
 
 
+# ASTROCYTE SPECIFIC QC CHECKS
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/3690c14a-4fd2-45f5-8e37-f2d1e4f7146a" />
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/7aa27baa-5244-40a3-b87f-54feb87e6670" />
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/844896ca-4d3d-497c-82f8-369f3a205ad6" />
+
+* Variable Features for Astrocytes
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/4efad940-9264-4b05-8997-bd52a7e61622" />
+
+* Checking for Batch Effects in Astrocytes wih PCA and UMAP
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/28fc5ee9-74ad-47d0-a9bd-417c1ba57c08" />
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/0daf4cf5-d017-479d-9eca-d4cc1d3e2dfd" />
+
+* Visualizing UMAP comparing AD to WT
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/279e53c0-3ca6-48ea-8421-22f22ba225d7" />
+
+* MA PLOT and VOLCANO PLOT
+significane line for volcano plot is default value of the EnhancedVolcano function, the signficane of each gene may be different.
+
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/9f4b047f-36bb-4c79-86a8-264ef1970435" />
+
+<img width="700" height="432" alt="image" src="https://github.com/user-attachments/assets/f4c6ae9e-9c9a-4d6e-95d4-df4185b8ed87" />
+
+* Results for AQP4 expression
+<img width="534" height="132" alt="image" src="https://github.com/user-attachments/assets/994e6f2e-4393-482a-ae9d-39e9426ccd97" />
+
+
+
 
 
 
