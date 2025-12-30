@@ -103,7 +103,7 @@ astro_data <- ScaleData(astro_data, features = all.genes)
 ```{r}
 astro_data <- RunPCA(astro_data, features = VariableFeatures(object = astro_data))
 ElbowPlot(astro_data)
-DimPlot(astro_data, reduction = "pca", label = TRUE) + NoLegend()
+DimPlot(astro_data, reduction = "pca")
 ```
 
 ```{r}
@@ -210,7 +210,6 @@ table(colData$AD_STATUS)
 deseq_matrix <- DESeq(deseq_matrix)
 res <- results(deseq_matrix)
 res['Aqp4',]
-res['Gfap',]
 ```
 ```{r}
 plotMA(res)
