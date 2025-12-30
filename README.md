@@ -14,7 +14,7 @@ nucleus. Typically snRNA seq data is analyzed very simmilarly to scRNA seq data,
 that your are primarily going to be looking at transcripts from the nucleus and in theory
 should have less mitochondrial reads in the data. It is a very good idea to look at the localization of the transcripts
 you are studying as well as the mitochondrial conent of the cells you are studying to be better informed during your QC 
-steps.
+steps. The samples here come from 7 month old male mice who are WT or 5xFAD mice which are intended to simulate AD
 
 * Workflow:
 1. QC and normalization of snRNA seq data, importantly snRNA seq data should have
@@ -117,9 +117,7 @@ significane line for volcano plot is default value of the EnhancedVolcano functi
 
 
 
-
-I don't think there is a super strong batch effect in the data, based of the UMAP
-and PCA plots. Also AQP4 expression did not seem to vary much between AD and WT
-mouse populations.
-
+Conclusions I don't think there are super strong batch effects in the data, and AQP4 expression seems to not differ between AD and WT mice. This 
+could be because AQP4 is not really expressed much at the nucleus, poor sample size, or there geuniley not being a difference in AQP4 expression when comparing
+WT to AD mice.
 
