@@ -64,6 +64,32 @@ to batches.
 8. I visualized the DESEQ2 results with an ma and volcano plot.
 
 * Results and Figures
+# QC PLOTS for entire ~57 k cell dataset which includes more than Astrocytes
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/f0c2f750-d659-45c5-af97-7dff1a5f523c" />
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/16c52470-b59e-4af3-be8b-a5918031ca19" />
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/1a2e590c-2964-4ec3-9574-49499a7f86c0" />
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/58270ee7-46d2-4f5a-aa89-aacd151170be" />
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/e4d4ceaa-cbef-40b0-b00b-6ccf48868db7" />
+
+# Batch Effects in 57k data
+<img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/45311569-cad6-4df0-9d5a-84db1290b707" />
+
+* Unannotated Cell Types
+* <img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/490fadc0-75ff-4393-b98f-8f54ad68be2a" />
+
+Visulazing the distribution of some transcripts to find clusters corresponding to astrocytes
+<img width="1181" height="647" alt="image" src="https://github.com/user-attachments/assets/e3713e6a-9371-4319-a7cc-676498bdf1ab" />
+
+Astrocytes vs Nonastrocyte clusters
+<img width="700" height="432" alt="image" src="https://github.com/user-attachments/assets/21f87580-c27c-4351-8037-c0c1f9233471" />
+
+
+
+
+
+
+
+
 
 I don't think there is a super strong batch effect in the data, based of the UMAP
 and PCA plots. Also AQP4 expression did not seem to vary much between AD and WT
