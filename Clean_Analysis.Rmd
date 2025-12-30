@@ -107,7 +107,7 @@ x <- counts@meta.data$seurat_clusters
 ```
 
 
-# using scCATCH to identify cell types for me (probably suboptimal lowkey but im kinda of tired)
+# Plotting distribution of some astrocyte marker genes plus AQP4 (AQP4 is my own addition), in order to isolate clusters that could be astrocytes. For further seperate analysis
 
 ```{r}
 FeaturePlot(counts, features = c("Slc1a3", "Gfap", "Aldoc", "Glul", "Rarres2", "Slc6a13", "Aqp4"))
@@ -145,7 +145,7 @@ SaveSeuratRds(astro_only,
               file= "astro_only.rds")
 ```
 
-Exporting the seurat object as a csv for a seperate analysis (pseudobulk)
+Exporting the astrocyte specific seurat object as a csv for a seperate analysis later (pseudobulk). 
 ```{r}
 counts_mtx <- astro_only[["RNA"]]$counts 
 
