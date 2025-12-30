@@ -74,7 +74,7 @@ ElbowPlot(counts)
 counts <- RunUMAP(counts, dims = 1:30, verbose = FALSE)
 counts <- FindNeighbors(counts, dims = 1:30, verbose = FALSE)
 counts <- FindClusters(counts, verbose = FALSE)
-DimPlot(counts, label = TRUE, group.by='orig.ident') + labs(title="Batch Effects UMAP")
+DimPlot(counts, group.by='orig.ident') + labs(title="Batch Effects UMAP")
 ```
 identifying batch effects in umap plot
 ```{r}

@@ -103,7 +103,7 @@ astro_data <- ScaleData(astro_data, features = all.genes)
 ```{r}
 astro_data <- RunPCA(astro_data, features = VariableFeatures(object = astro_data))
 ElbowPlot(astro_data)
-DimPlot(astro_data, reduction = "pca") + NoLegend()
+DimPlot(astro_data, reduction = "pca", label = TRUE) + NoLegend()
 ```
 
 ```{r}
