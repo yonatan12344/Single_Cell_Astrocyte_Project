@@ -16,6 +16,8 @@ should have less mitochondrial reads in the data. It is a very good idea to look
 you are studying as well as the mitochondrial conent of the cells you are studying to be better informed during your QC 
 steps. The samples here come from 7 month old male mice who are WT or 5xFAD mice which are intended to simulate AD
 
+* Identifying astrocytes and exporting their cells for further pseudobulk analysis was done in the Clean_Analysis.RMD file, while pseudobulk analysis of the astrocyte cells only, was done in the true_astrocyte_analysis.RMD file.
+
 * Workflow:
 1. QC and normalization of snRNA seq data, importantly snRNA seq data should have
 lower mitochondrial content then scRNA seq data, so my 5 percent cutoff may have been
