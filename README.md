@@ -41,6 +41,7 @@ as well as AQP4 on the seurat clusters, to identify which clusters likely contai
 a count matrix csv file.
 
                     #PSEUDOBULK STEPS
+
 1. I did some preprocessing checks, but ultimately did not modify the data since, choosing to rely on the
 QC was already performed on the entire scRNA seq dataset I subseted the astrocyte data from
 earlier.
