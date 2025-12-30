@@ -130,27 +130,93 @@ library(cowplot)
 library(dplyr)
 library(ggrepel)
 ```
-DESEQ 2 Steps
 ```{r}
+# getting the aggregated data
 astro_data@meta.data
-aggr_counts <- AggregateExpression(
-  astro_data,
-  group.by = c("sample_id", "AD_STATUS"),
-  return.seurat = TRUE
+agg_data <- AggregateExpression(astro_data,
+                                group.by='sample_id')
+bulk_counts <- agg_data$RNA
+# Generating sample level metadata
+colData <- data.frame(
+  AD_STATUS = rep(NA,ncol(bulk_counts)),
+  row.names = colnames(bulk_counts)
 )
-#return.seurat is not needed but given that I already have the sample data, it stops me from having to reconstruct it. Also rember you need to pass in the taw counts
+```
+```{r}
+status_lookup <- c(
+  "sample-1"  = "AD",
+  "sample-2"  = "WT",
+  "sample-3"  = "WT",
+  "sample-4"  = "AD",
+  "sample-5"  = "AD",
+  "sample-6"  = "WT",
+  "sample-7"  = "AD",
+  "sample-8"  = "AD",
+  "sample-9"  = "WT",
+  "sample-10" = "WT"
+)
 
-counts <- LayerData(aggr_counts, assay = "RNA", layer = "counts")
-col_data <- aggr_counts@meta.data
-col_data$AD_STATUS <- factor(col_data$AD_STATUS, levels = c("WT", "AD"))
-# Making a DESeq2 object
-dds <- DESeqDataSetFromMatrix(
-  countData = counts,
-  colData = col_data,
-  design = ~ AD_STATUS
-)
-dds <- DESeq(dds)
-res <- results(dds)
-res@rownames
+colData$AD_STATUS <- status_lookup[rownames(colData)]
+colData$AD_STATUS <- factor(colData$AD_STATUS)
+```
+# SANITY CHECK
+
+```{r}
+# Must be TRUE
+all(colnames(bulk_counts) == rownames(colData))
+# Must be TRUE as well
+all(colnames(bulk_counts) %in% rownames(colData))
+
+```
+# RUNNING DESEQ2 !!!!!!!
+```{r}
+#Making the object for deseq2
+deseq_matrix <- DESeqDataSetFromMatrix(countData = bulk_counts,
+colData = colData,
+design = ~ AD_STATUS)
+```
+
+# prefiltering step
+```{r}
+keep <- rowSums(counts(deseq_matrix)) >= 10
+deseq_matrix <- deseq_matrix[keep,]
+deseq_matrix
+```
+# changing what is considered the "baseline" for comparison for DESEQ2 away from alphabetical
+```{r}
+deseq_matrix$AD_STATUS <- relevel(deseq_matrix$AD_STATUS, ref = "WT")
+```
+
+# Diagnosing problem withrow names supplied being wrong lenth
+```{r}
+# 1. Length check
+length(colnames(bulk_counts))
+length(rownames(colData))
+
+# 2. Identity + order check
+identical(colnames(bulk_counts), rownames(colData))
+
+# 3. See differences if any
+setdiff(colnames(bulk_counts), rownames(colData))
+setdiff(rownames(colData), colnames(bulk_counts))
+
+# 4. Check AD_STATUS
+str(colData$AD_STATUS)
+table(colData$AD_STATUS)
+
+```
+#running DESEQ2
+```{r}
+deseq_matrix <- DESeq(deseq_matrix)
+res <- results(deseq_matrix)
+res['Aqp4',]
+res['Gfap',]
+```
+```{r}
+plotMA(res)
+EnhancedVolcano(res,
+    lab = rownames(res),
+    x = 'log2FoldChange',
+    y = 'pvalue')
 ```
 
