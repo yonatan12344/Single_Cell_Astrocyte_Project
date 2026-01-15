@@ -1,27 +1,24 @@
 # Single_Cell_Astrocyte_Project
 * The data in this project is taken from the following paper, "Disease-associated astrocytes in Alzheimer’s disease and aging".
 The count matrix file I used called GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt is from the Disease-associated astrocytes in 
-Alzheimer’s disease and aging paper (PMID:32341542). The GEO asscession id for the dataset is GSE143758. 
+Alzheimer’s disease and aging paper (PMID:32341542). The GEO accession ID  for the dataset is GSE143758. 
 
 * Disclaimer
-This project is purely an excersise in learning bioinformatics, and its results should not be taken as biologically valid,
-as several steps such as doublet detection, figuring out whether Sctransform or the NormalizeData-ScaleData-FindVariableFeatures
-approach was better suited to the dataset. I also did not look into what the normal range of mitochondrial expression for astrocytes
-are. 
+This project is purely an exercise in learning bioinformatics, and its results should not be taken as biologically valid, as several steps, such as doublet detection, figuring out whether Sctransform or the NormalizeData-ScaleData-FindVariableFeatures was better suited to the data was not performed. I also did not look into what the normal range of mitochondrial expression for astrocytes is.
 
 * Background: snRNA seq is an approach that allows you to understand the expression of cells by looking at their
-nucleus. Typically snRNA seq data is analyzed very simmilarly to scRNA seq data, although it is important to note
-that your are primarily going to be looking at transcripts from the nucleus and in theory
-should have less mitochondrial reads in the data. It is a very good idea to look at the localization of the transcripts
-you are studying as well as the mitochondrial conent of the cells you are studying to be better informed during your QC 
-steps. The samples here come from 7 month old male mice who are WT or 5xFAD mice which are intended to simulate AD
+nucleus. Typically, snRNA seq data is analyzed very similarly to scRNA seq data, although it is important to note
+that you are primarily going to be looking at transcripts from the nucleus and, in theory,
+should have fewer mitochondrial reads in the data. It is a very good idea to look at the localization of the transcripts
+you are studying as well as the mitochondrial content of the cells you are studying to be better informed during your QC 
+steps. The samples here come from 7-month-old male mice who are WT or 5xFAD mice, which are intended to simulate AD
 
-* Identifying astrocytes and exporting their cells for further pseudobulk analysis was done in the Clean_Analysis.RMD file, while pseudobulk analysis of the astrocyte cells only, was done in the true_astrocyte_analysis.RMD file.
+* Identifying astrocytes and exporting their cells for further pseudobulk analysis was done in the Clean_Analysis.RMD file, while pseudobulk analysis of the astrocyte cells only was done in the true_astrocyte_analysis.RMD file.
 
 * Workflow:
-1. QC and normalization of snRNA seq data, importantly snRNA seq data should have
-lower mitochondrial content then scRNA seq data, so my 5 percent cutoff may have been
-to high. QC metrics will a bit different and determined by examing plots for each batch 
+1. QC and normalization of snRNA seq data, importantly, snRNA seq data should have
+lower mitochondrial content than scRNA seq data, so my 5 percent cutoff may have been
+too high. QC metrics will be a bit different and determined by examining plots for each batch 
 separately.
 
 2. ScTransform was used for normalization, although I am unsure as to whether this
@@ -29,39 +26,39 @@ approach is a better fit for my data than traditional normalization, scaling, an
 features methods. 
 
 3. Used an elbowplot to determine the ideal number of dimensions for PCA and UMAP.
-Then made PCA and UMAP plots, to see the potential influence of batch effects on the data.
+Then, I created PCA and UMAP plots to examine the potential influence of batch effects on the data.
 
-4. This is a redundant step that was not really used, but I ran PrepSCTmarkers on the seurat
-object in order to deal with the fact I have seperate batches to work with, and then ran Findall markers
+4. This is a redundant step that was not really used, but I ran PrepSCTmarkers on the Seurat
+object in order to deal with the fact that I have separate batches to work with, and then ran Findall markers
 to isolate potential marker genes for each of the clusters, which in theory should correspond
 to separate cell types.
 
-5. I just visualized the distribution of some transcripts the paper mentioned that were used to identify astrocytes
-as well as AQP4 on the seurat clusters, to identify which clusters likely contain the astrocytes.
+5. I just visualized the distribution of some transcripts that the paper mentioned were used to identify astrocytes
+as well as AQP4 on the Seurat clusters, to identify which clusters likely contain the astrocytes.
 
-6. Took the astrocyte clusters and saved them as a seurat object and exported them as 
+6. 1. Took the astrocyte clusters and saved them as a Seurat object and exported them as
 a count matrix csv file.
 
 **PSEUDOBULK STEPS**
 
-1. I did some preprocessing checks, but ultimately did not modify the data since, choosing to rely on the
-QC was already performed on the entire scRNA seq dataset I subseted the astrocyte data from
+1. I did some preprocessing checks, but ultimately did not modify the data since I chose to rely on the
+QC was already performed on the entire scRNA seq dataset. I subsetted the astrocyte data from
 earlier.
 
-2. I did some object manipulation to get sample states (AD vs WT) organized within the seurat object
+2. I did some object manipulation to get sample states (AD vs WT) organized within the Seurat object
 clearly.
 
-3. I normalized the data, found variable features, and scaled it.
+3. I normalized the data, identified variable features, and scaled them.
 
-4. I looked for batch effects with PCA, and used and ElbowPlot to find the ideal
-number of dimension for running UMAP later on.
+4. I looked for batch effects with PCA, and used an ElbowPlot to find the ideal
+number of dimensions for running UMAP later on.
 
-5. After I ran Find neighbors and Find Clusters, I ran UMAP
+5. After I ran Findneighbors and FindClusters, I ran UMAP.
 
 6. I visualized the UMAP with respect to. AD and WT, and also displayed it with respect
 to batches.
 
-7. I did differntial gene expression testing with DESEQ2 after performing pseudobulking
+7. I did differential gene expression testing with DESEQ2 after performing pseudobulking
 
 8. I visualized the DESEQ2 results with an ma and volcano plot.
 
@@ -94,7 +91,7 @@ Astrocytes vs Nonastrocyte clusters
 * Variable Features for Astrocytes
 <img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/4efad940-9264-4b05-8997-bd52a7e61622" />
 
-* Checking for Batch Effects in Astrocytes wih PCA and UMAP
+* Checking for Batch Effects in Astrocytes with PCA and UMAP
 <img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/28fc5ee9-74ad-47d0-a9bd-417c1ba57c08" />
 <img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/0daf4cf5-d017-479d-9eca-d4cc1d3e2dfd" />
 
@@ -102,7 +99,7 @@ Astrocytes vs Nonastrocyte clusters
 <img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/279e53c0-3ca6-48ea-8421-22f22ba225d7" />
 
 * MA PLOT and VOLCANO PLOT
-significane line for volcano plot is default value of the EnhancedVolcano function, the signficane of each gene may be different.
+Significance line for volcano plot is the default value of the EnhancedVolcano function; the significance of each gene may be different.
 
 <img width="514" height="317" alt="image" src="https://github.com/user-attachments/assets/9f4b047f-36bb-4c79-86a8-264ef1970435" />
 
@@ -117,9 +114,7 @@ significane line for volcano plot is default value of the EnhancedVolcano functi
 
 
 
-
-
-Conclusions I don't think there are super strong batch effects in the data, and AQP4 expression seems to not differ between AD and WT mice. This 
-could be because AQP4 is not really expressed much at the nucleus, poor sample size, or there geuniley not being a difference in AQP4 expression when comparing
+Conclusions, I don’t think there are super strong batch effects in the data, and AQP4 expression does not seem to differ between AD and WT mice. This
+could be because AQP4 is not really expressed much at the nucleus, poor sample size, or there genuinely not being a difference in AQP4 expression when comparing
 WT to AD mice.
 
